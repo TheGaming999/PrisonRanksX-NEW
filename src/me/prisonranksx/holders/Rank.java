@@ -73,6 +73,11 @@ public class Rank {
 		this.displayName = displayName;
 	}
 
+	/**
+	 * 
+	 * @return null when rank is last rank or its nextrank is set to "LASTRANK"
+	 */
+	@Nullable
 	public String getNextRankName() {
 		return nextRankName;
 	}

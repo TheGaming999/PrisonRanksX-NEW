@@ -21,7 +21,7 @@ public abstract class AbstractCommand extends BukkitCommand {
 	}
 
 	public boolean register() {
-		return CommandLoader.registerCommand(section.getString("plugin", "prisonranksx"), this);
+		return CommandLoader.registerCommand(section.getString("plugin", "PrisonRanksX"), this);
 	}
 
 	public void unregister() {

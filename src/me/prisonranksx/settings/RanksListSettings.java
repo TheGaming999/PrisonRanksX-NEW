@@ -11,6 +11,7 @@ public class RanksListSettings extends AbstractSettings {
 
 	public RanksListSettings() {
 		super("Ranks-List-Options");
+		setup();
 	}
 
 	@Override

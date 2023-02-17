@@ -21,7 +21,7 @@ import me.prisonranksx.reflections.UniqueId;
 public class PlayerChatListener implements EventExecutor, Listener {
 
 	private PrisonRanksX plugin;
-	private final String colorReset = "§r";
+	private final String colorReset = "Â§r";
 	private final String empty = "";
 	private final String space = " ";
 

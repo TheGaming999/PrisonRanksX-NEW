@@ -4,11 +4,20 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+import javax.annotation.Nullable;
+
 import org.bukkit.entity.Player;
 
 import me.prisonranksx.PrisonRanksX;
+import me.prisonranksx.data.PrestigeStorage;
+import me.prisonranksx.data.RankStorage;
 import me.prisonranksx.executors.IRankupExecutor;
 import me.prisonranksx.executors.IRankupExecutor.RankupResult;
+import me.prisonranksx.holders.Prestige;
+import me.prisonranksx.holders.Rank;
+import me.prisonranksx.holders.User;
+import me.prisonranksx.reflections.UniqueId;
+import me.prisonranksx.utilities.Rina;
 
 public class PRXAPI {
 
@@ -60,6 +69,69 @@ public class PRXAPI {
 
 	public static Set<UUID> getAutoRankupPlayers() {
 		return IRankupExecutor.AUTO_RANKUP_PLAYERS;
+	}
+
+	public static Rank getPlayerRank(UUID uniqueId) {
+		User user = plugin.getUserController().getUser(uniqueId);
+		return RankStorage.getRank(user.getRankName(), user.getPathName());
+	}
+
+	public static Rank getPlayerRank(Player player) {
+		return getPlayerRank(UniqueId.getUUID(player));
+	}
+
+	@Nullable
+	public static Prestige getPlayerPrestige(UUID uniqueId) {
+		User user = plugin.getUserController().getUser(uniqueId);
+		return PrestigeStorage.getPrestige(user.getPrestigeName());
+	}
+
+	@Nullable
+	public static Prestige getPlayerPrestige(Player player) {
+		return getPlayerPrestige(UniqueId.getUUID(player));
+	}
+
+	public static boolean hasPrestige(UUID uniqueId) {
+		return plugin.getUserController().getUser(uniqueId).getPrestigeName() != null;
+	}
+
+	public static boolean hasPrestige(Player player) {
+		return hasPrestige(UniqueId.getUUID(player));
+	}
+
+	public static long getPlayerPrestigeNumber(UUID uniqueId) {
+		User user = plugin.getUserController().getUser(uniqueId);
+		return PrestigeStorage.getHandler().getPrestigeNumber(user.getPrestigeName());
+	}
+
+	public static long getPlayerPrestigeNumber(Player player) {
+		return getPlayerPrestigeNumber(UniqueId.getUUID(player));
+	}
+
+	public static double getRankFinalCost(Rank rank, UUID uniqueId) {
+		Prestige prestige = getPlayerPrestige(uniqueId);
+		if (!hasPrestige(uniqueId)) return rank.getCost();
+		return Double.parseDouble(Rina.evaluateMathExpression(plugin.getPrestigeSettings()
+				.getIncreaseExpression()
+				.replace("{increase_percentage}", String.valueOf(prestige.getCostIncrease()))
+				.replace("{rank_cost}", String.valueOf(rank.getCost()))
+				.replace("{prestige_number}", String.valueOf(getPlayerPrestigeNumber(uniqueId)))));
+	}
+
+	public static double getRankFinalCost(Rank rank, Player player) {
+		Prestige prestige = getPlayerPrestige(player);
+		if (!hasPrestige(player)) return rank.getCost();
+		return Double.parseDouble(Rina.evaluateMathExpression(plugin.getPrestigeSettings()
+				.getIncreaseExpression()
+				.replace("{increase_percentage}", String.valueOf(prestige.getCostIncrease()))
+				.replace("{rank_cost}", String.valueOf(rank.getCost()))
+				.replace("{prestige_number}", String.valueOf(getPlayerPrestigeNumber(player)))));
+	}
+
+	public static String getPlayerPathOrDefault(Player player) {
+		UUID uuid = UniqueId.getUUID(player);
+		if (plugin.getUserController().isLoaded(uuid)) return plugin.getUserController().getUser(uuid).getPathName();
+		return RankStorage.getDefaultPath();
 	}
 
 }

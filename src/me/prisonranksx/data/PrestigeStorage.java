@@ -168,6 +168,14 @@ public class PrestigeStorage {
 			return prestigeStorage.matchPrestige(name);
 		}
 
+		public boolean isInfinite() {
+			return prestigeStorage.isInfinite();
+		}
+
+		public long getPrestigeNumber(String name) {
+			return prestigeStorage.getPrestigeNumber(name);
+		}
+
 	}
 
 	private static interface IPrestigeStorage {
@@ -197,6 +205,10 @@ public class PrestigeStorage {
 		String matchPrestigeName(String name);
 
 		Prestige matchPrestige(String name);
+
+		boolean isInfinite();
+
+		long getPrestigeNumber(String name);
 
 	}
 
@@ -320,6 +332,16 @@ public class PrestigeStorage {
 			return prestiges.get(matchPrestigeName(name));
 		}
 
+		@Override
+		public boolean isInfinite() {
+			return false;
+		}
+
+		@Override
+		public long getPrestigeNumber(String name) {
+			return prestiges.get(name).getNumber();
+		}
+
 	}
 
 	private static class InfinitePrestigeStorage implements IPrestigeStorage {
@@ -412,6 +434,16 @@ public class PrestigeStorage {
 		@Override
 		public Prestige matchPrestige(String name) {
 			return prestiges.get(Long.parseLong(name));
+		}
+
+		@Override
+		public boolean isInfinite() {
+			return true;
+		}
+
+		@Override
+		public long getPrestigeNumber(String name) {
+			return Long.parseLong(name);
 		}
 
 	}

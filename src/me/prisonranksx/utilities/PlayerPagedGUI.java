@@ -210,6 +210,11 @@ public class PlayerPagedGUI implements Listener {
 			this.onClick = e -> {};
 		}
 
+		@Override
+		public GUIItem clone() {
+			return GUIItem.create(itemStack.clone()).o(onClick);
+		}
+
 		public static GUIItem create(ItemStack itemStack) {
 			return new GUIItem(itemStack);
 		}
@@ -232,6 +237,11 @@ public class PlayerPagedGUI implements Listener {
 
 		public Consumer<InventoryClickEvent> getOnClick() {
 			return onClick;
+		}
+
+		private GUIItem o(Consumer<InventoryClickEvent> c) {
+			this.onClick = c;
+			return this;
 		}
 
 	}

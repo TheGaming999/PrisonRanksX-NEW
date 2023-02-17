@@ -34,16 +34,16 @@ public class RanksGUIList extends AbstractGUIList {
 			String rankName = rank.getName();
 			if (rankIndex < currentRankIndex) {
 				GUIItem specialItem = getSpecialCompletedItems().get(rankName);
-				getPlayerPagedGUI().addPagedItem(update(specialItem != null ? specialItem : getCompletedItem(),
+				getPlayerPagedGUI().addPagedItem(update(specialItem != null ? specialItem : getCompletedItem().clone(),
 						rankName, pathName, fun(rank, rankName)), player);
 			} else if (rankIndex == currentRankIndex) {
 				GUIItem specialItem = getSpecialCurrentItems().get(rankName);
-				getPlayerPagedGUI().addPagedItem(update(specialItem != null ? specialItem : getCurrentItem(), rankName,
-						pathName, fun(rank, rankName)), player);
+				getPlayerPagedGUI().addPagedItem(update(specialItem != null ? specialItem : getCurrentItem().clone(),
+						rankName, pathName, fun(rank, rankName)), player);
 			} else if (rankIndex > currentRankIndex) {
 				GUIItem specialItem = getSpecialOtherItems().get(rankName);
-				getPlayerPagedGUI().addPagedItem(update(specialItem != null ? specialItem : getOtherItem(), rankName,
-						pathName, fun(rank, rankName)), player);
+				getPlayerPagedGUI().addPagedItem(update(specialItem != null ? specialItem : getOtherItem().clone(),
+						rankName, pathName, fun(rank, rankName)), player);
 			}
 		});
 		getPlayerPagedGUI().openInventory(player);

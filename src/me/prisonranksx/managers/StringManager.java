@@ -156,6 +156,21 @@ public class StringManager extends StaticCache {
 		return string == null ? null : STRING_MANAGER.parseAll(string, player, definition);
 	}
 
+	/**
+	 * Combines command arguments into one string starting from {@code num}
+	 * 
+	 * @param args arguments to combine from
+	 * @param num  number to start combining from
+	 * @return string with the combined arguments
+	 */
+	public static String getArgs(String[] args, int num) {
+		StringBuilder sb = new StringBuilder();
+		for (int i = num; i < args.length; i++) {
+			sb.append(args[i]).append(" ");
+		}
+		return sb.toString().trim();
+	}
+
 	private interface IStringManager {
 
 		/**

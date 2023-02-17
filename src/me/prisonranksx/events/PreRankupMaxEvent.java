@@ -28,7 +28,7 @@ public class PreRankupMaxEvent extends Event implements Cancellable {
 	}
 
 	public PreRankupMaxEvent(Player player, Rank rankupFrom, Set<Rank> ranksToBePassed) {
-		super(true);
+		super(false);
 		this.player = player;
 		this.rankupFrom = rankupFrom;
 		this.ranksToBePassed = ranksToBePassed;

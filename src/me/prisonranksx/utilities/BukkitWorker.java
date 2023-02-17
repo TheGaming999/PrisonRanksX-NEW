@@ -131,12 +131,44 @@ public class BukkitWorker {
 
 		private Object object;
 
+		/**
+		 * Start a for loop
+		 * 
+		 * @param action action to perform on loop element
+		 * @return LoopFuture
+		 */
 		public abstract LoopFuture<T> forEach(Consumer<? super T> action);
 
+		/**
+		 * Uses pseudo async alongside bukkit async, this means that non-thread safe
+		 * methods should be handled manually.
+		 * 
+		 * @param action action to perform
+		 * @return LoopFuture
+		 */
 		public abstract LoopFuture<T> asyncForEach(Consumer<? super T> action);
 
+		/**
+		 * Start a for loop
+		 * 
+		 * @param action          action to perform on loop element
+		 * @param maxMilliseconds how many milliseconds a tick can last, increasing this
+		 *                        value will speed up the task inreturn of decreasing
+		 *                        the tps by a little
+		 * @return LoopFuture
+		 */
 		public abstract LoopFuture<T> forEach(double maxMilliseconds, Consumer<? super T> action);
 
+		/**
+		 * Uses pseudo async alongside bukkit async, this means that non-thread safe
+		 * methods should be handled manually.
+		 * 
+		 * @param action          action to perform
+		 * @param maxMilliseconds how many milliseconds a tick can last, increasing this
+		 *                        value will speed up the task inreturn of decreasing
+		 *                        the tps by a little
+		 * @return LoopFuture
+		 */
 		public abstract LoopFuture<T> asyncForEach(double maxMilliseconds, Consumer<? super T> action);
 
 		public abstract void forceBreak();
@@ -796,7 +828,7 @@ public class BukkitWorker {
 	 * run in the main workload to finish before execution.
 	 * 
 	 * @param consumer consumer to consume c ->
-	 * @param object object to include
+	 * @param object   object to include
 	 */
 	public static <T> void consume(Consumer<? super T> consumer, T object) {
 		MAIN_WORKLOAD_RUNNABLE.addWorkload(new ConsumerWorkload<T>(object, consumer));

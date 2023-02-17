@@ -1,5 +1,6 @@
 package me.prisonranksx.managers;
 
+import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -143,15 +144,61 @@ public class ConfigManager extends StaticCache {
 		return null;
 	}
 
+	@Nullable
+	public static String setOrElse(ConfigurationSection configurationSection, String[] fields, Object value) {
+		for (String field : fields) {
+			if (configurationSection.contains(field)) {
+				configurationSection.set(field, value);
+				return field;
+			}
+		}
+		return null;
+	}
+
+	@Nullable
+	public static String setOrDefault(ConfigurationSection configurationSection, String[] fields, Object value) {
+		for (String field : fields) {
+			if (configurationSection.contains(field)) {
+				configurationSection.set(field, value);
+				return field;
+			}
+		}
+		configurationSection.set(fields[0], value);
+		return fields[0];
+	}
+
+	@Nullable
+	public static String getFieldOrElse(ConfigurationSection configurationSection, String... fields) {
+		for (String field : fields) {
+			if (configurationSection.contains(field)) return field;
+		}
+		return null;
+	}
+
 	@Nonnull
-	public static double getDoubleOrElse(ConfigurationSection configurationSection, String... fields) {
+	public static double getTrueDoubleOrElse(ConfigurationSection configurationSection, String... fields) {
 		for (String field : fields)
 			if (configurationSection.isDouble(field)) return configurationSection.getDouble(field);
 		return 0.0;
 	}
 
 	@Nonnull
+	public static double getDoubleOrElse(ConfigurationSection configurationSection, String... fields) {
+		for (String field : fields) if (configurationSection.isDouble(field) || configurationSection.isLong(field)
+				|| configurationSection.isInt(field))
+			return configurationSection.getDouble(field);
+		return 0.0;
+	}
+
+	@Nonnull
 	public static long getLongOrElse(ConfigurationSection configurationSection, String... fields) {
+		for (String field : fields) if (configurationSection.isLong(field) || configurationSection.isInt(field))
+			return configurationSection.getLong(field);
+		return 0l;
+	}
+
+	@Nonnull
+	public static long getTrueLongOrElse(ConfigurationSection configurationSection, String... fields) {
 		for (String field : fields) if (configurationSection.isLong(field)) return configurationSection.getLong(field);
 		return 0l;
 	}
@@ -187,6 +234,9 @@ public class ConfigManager extends StaticCache {
 			if (configurationSection.contains(field)) {
 				if (configurationSection.isList(field) && !configurationSection.getStringList(field).isEmpty())
 					return (List<T>) configurationSection.getList(field, null);
+				else
+					return (List<T>) Arrays.asList(configurationSection.get(field));
+
 			}
 		}
 		return null;

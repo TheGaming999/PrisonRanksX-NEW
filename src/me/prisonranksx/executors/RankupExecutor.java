@@ -48,9 +48,11 @@ public class RankupExecutor implements IRankupExecutor {
 	public RankupExecutor(PrisonRanksX plugin) {
 		this.plugin = plugin;
 		int speed = plugin.getGlobalSettings().getAutoRankupDelay();
-		hologramHeight = plugin.getHologramSettings().getRankupHeight();
-		hologramDelay = plugin.getHologramSettings().getRankupRemoveDelay();
-		autoRankupTask = plugin.doAsyncRepeating(() -> AUTO_RANKUP_PLAYERS.forEach(p -> silentRankup(p)), 1, speed);
+		if (plugin.getGlobalSettings().isHologramsPlugin()) {
+			hologramHeight = plugin.getHologramSettings().getRankupHeight();
+			hologramDelay = plugin.getHologramSettings().getRankupRemoveDelay();
+		}
+		autoRankupTask = plugin.doAsyncRepeating(() -> AUTO_RANKUP_PLAYERS.forEach(this::silentRankup), 1, speed);
 	}
 
 	private RankupResult silentRankup(UUID uniqueId) {
@@ -214,6 +216,7 @@ public class RankupExecutor implements IRankupExecutor {
 
 	@Override
 	public RankupResult rankup(Player player, boolean silent) {
+		if (!silent) return rankup(player);
 		RankupResult rankupResult = canRankup(player);
 		if (!callAsyncAutoRankupEvent(player, rankupResult, rankupResult.getStringResult())) return rankupResult;
 		if (rankupResult.isSuccessful()) {
@@ -257,6 +260,10 @@ public class RankupExecutor implements IRankupExecutor {
 
 		// Pre rankup max stuff
 		Rank currentRank = RankStorage.getRank(user.getRankName(), user.getPathName());
+		if (currentRank.getNextRankName() == null) {
+			Messages.sendMessage(player, Messages.getLastRank());
+			return CompletableFuture.completedFuture(RankupResult.FAIL_LAST_RANK.withRank(currentRank).withUser(user));
+		}
 
 		// Clone of the ranks
 		Set<Rank> ranks = new LinkedHashSet<>(RankStorage.getPathRanks(user.getPathName()));
@@ -264,9 +271,8 @@ public class RankupExecutor implements IRankupExecutor {
 		// Remove unneccessary ranks to make sure we don't go through them in the loop
 		ranks.removeIf(rank -> rank.getIndex() <= currentRank.getIndex());
 
-		// If event is cancelled, then we can't return a meaningful rankup result, so we
-		// will return null instead.
-		if (!callPreRankupMaxEvent(player, currentRank, ranks)) return null;
+		if (!callPreRankupMaxEvent(player, currentRank, ranks)) return CompletableFuture.completedFuture(
+				RankupResult.FAIL_OTHER.withRank(currentRank).withUser(user).withString(currentRank.getName()));
 
 		PreparedLoop<Rank> rankupLoop = BukkitWorker.prepareLoop(ranks);
 
@@ -278,21 +284,22 @@ public class RankupExecutor implements IRankupExecutor {
 		// Count rankups so they are sent to the event
 		AtomicInteger rankups = new AtomicInteger(0);
 
-		// Set player balance to 0.0, so he doesn't abuse it by purchasing other things
+		// Set player balance to 0.0, so they doesn't abuse it by purchasing other
+		// things
 		// in the middle of a rankup max
 		EconomyManager.setBalance(player, 0.0);
 
 		CompletableFuture<RankupResult> finalRankupResult = new CompletableFuture<>();
 		rankupLoop.forEach(rank -> {
 			RankupResult rankupResult = canRankup(player, originalBalance.get());
+			rankupLoop.storeObject(rankupResult);
 			if (rankupResult.isSuccessful()) {
 				executeComponents(rankupResult.getRankResult(), player);
 				rankupResult.getUserResult().setRankName(rankupResult.getStringResult());
 				originalBalance.set(originalBalance.get() - rankupResult.getDoubleResult());
-				takenBalance.set(takenBalance.get() + rankupResult.getDoubleResult());
+				takenBalance.addAndGet(rankupResult.getDoubleResult());
 				rankups.incrementAndGet();
 			} else {
-				rankupLoop.storeObject(rankupResult);
 				rankupLoop.forceBreak();
 			}
 			if (lastRank != null && rankupResult.getStringResult().equals(lastRank)) rankupLoop.forceBreak();
@@ -324,10 +331,19 @@ public class RankupExecutor implements IRankupExecutor {
 				default:
 					break;
 			}
+			double cost = takenBalance.get();
 			callAsyncRankupMaxEvent(player, rankupResult, currentRank.getName(), rankupResult.getStringResult(),
-					rankups.get(), takenBalance.get(), false);
+					rankups.get(), cost, false);
 			spawnHologram(rankupResult.getRankResult(), player, true);
 			updateGroup(player);
+			Messages.sendMessage(player, Messages.getRankupMax(),
+					updatedLine -> updatedLine.replace("%rank%", currentRank.getName())
+							.replace("%rank_display%", currentRank.getDisplayName())
+							.replace("%rankup%", rankupResult.getStringResult())
+							.replace("%rankup_display%", rankupResult.getRankResult().getDisplayName())
+							.replace("%cost%", String.valueOf(cost))
+							.replace("%cost_formatted%", EconomyManager.shortcutFormat(cost))
+							.replace("%cost_us_format%", EconomyManager.commaFormatWithDecimals(cost)));
 			finalRankupResult.complete(rankupResult);
 		});
 		return finalRankupResult;
@@ -402,6 +418,7 @@ public class RankupExecutor implements IRankupExecutor {
 	}
 
 	private void spawnHologram(Rank rank, Player player, boolean async) {
+		if (!plugin.getGlobalSettings().isHologramsPlugin() || !plugin.getHologramSettings().isRankupEnabled()) return;
 		IHologram hologram = HologramManager.createHologram(
 				"prx_" + player.getName() + rank.getName() + RandomUnique.global().generate(async),
 				player.getLocation().add(0, hologramHeight, 0), async);
@@ -415,7 +432,8 @@ public class RankupExecutor implements IRankupExecutor {
 	}
 
 	private void updateGroup(Player player) {
-		if (plugin.getPlayerGroupUpdater() != null) plugin.getPlayerGroupUpdater().update(player);
+		if (plugin.getGlobalSettings().isVaultGroups())
+			if (plugin.getPlayerGroupUpdater() != null) plugin.getPlayerGroupUpdater().update(player);
 	}
 
 	public BukkitTask getAutoRankupTask() {

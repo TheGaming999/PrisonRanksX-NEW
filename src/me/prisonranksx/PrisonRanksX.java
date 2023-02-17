@@ -9,17 +9,21 @@ import org.bukkit.scheduler.BukkitTask;
 
 import co.aikar.taskchain.TaskChain;
 import co.aikar.taskchain.TaskChainFactory;
+import me.prisonranksx.commands.PRXCommand;
+import me.prisonranksx.commands.RanksCommand;
 import me.prisonranksx.commands.RankupCommand;
 import me.prisonranksx.data.IUserController;
 import me.prisonranksx.data.PrestigeStorage;
 import me.prisonranksx.data.RankStorage;
 import me.prisonranksx.data.RebirthStorage;
 import me.prisonranksx.data.YamlUserController;
+import me.prisonranksx.executors.AdminExecutor;
 import me.prisonranksx.executors.IRankupExecutor;
 import me.prisonranksx.executors.RankupExecutor;
 import me.prisonranksx.hooks.IHologramManager;
 import me.prisonranksx.listeners.PlayerChatListener;
 import me.prisonranksx.listeners.PlayerLoginListener;
+import me.prisonranksx.lists.RanksTextList;
 import me.prisonranksx.managers.ActionBarManager;
 import me.prisonranksx.managers.ConversionManager;
 import me.prisonranksx.managers.EconomyManager;
@@ -34,6 +38,7 @@ import me.prisonranksx.settings.HologramSettings;
 import me.prisonranksx.settings.PlaceholderAPISettings;
 import me.prisonranksx.settings.PrestigeSettings;
 import me.prisonranksx.settings.RankSettings;
+import me.prisonranksx.settings.RanksListSettings;
 import me.prisonranksx.settings.RebirthSettings;
 
 public class PrisonRanksX extends JavaPlugin {
@@ -98,7 +103,7 @@ public class PrisonRanksX extends JavaPlugin {
 	 * private InventoryListener inventoryListener; // ======================
 	 * private TaskChainFactory taskChainFactory;
 	 */
-	private static final String PREFIX = "�e[�3PrisonRanks�cX�e]";
+	private static final String PREFIX = "§e[§3PrisonRanks§cX§e]";
 	private static final BukkitScheduler SCHEDULER = Bukkit.getScheduler();
 	private static final ConsoleCommandSender CONSOLE = Bukkit.getConsoleSender();
 	private static PrisonRanksX instance;
@@ -110,16 +115,20 @@ public class PrisonRanksX extends JavaPlugin {
 	private RebirthSettings rebirthSettings;
 	private PlaceholderAPISettings placeholderAPISettings;
 	private HologramSettings hologramSettings;
+	private RanksListSettings ranksListSettings;
 
 	// Executors
 	private IRankupExecutor rankupExecutor;
 	private IHologramManager hologramManager;
+	private AdminExecutor adminExecutor;
 
 	// Interfaces holding classes
 	private PlayerGroupUpdater playerGroupUpdater;
 
 	// Commands
+	private PRXCommand prxCommand;
 	private RankupCommand rankupCommand;
+	private RanksCommand ranksCommand;
 
 	// User Management
 	private IUserController userController;
@@ -127,6 +136,9 @@ public class PrisonRanksX extends JavaPlugin {
 	// Listeners
 	protected PlayerLoginListener playerLoginListener;
 	protected PlayerChatListener playerChatListener;
+
+	// List
+	private RanksTextList ranksTextList;
 
 	@Override
 	public void onEnable() {
@@ -145,6 +157,7 @@ public class PrisonRanksX extends JavaPlugin {
 		globalSettings = new GlobalSettings();
 		userController = new YamlUserController(this);
 		playerGroupUpdater = new PlayerGroupUpdater(this);
+		instance = this;
 		registerListeners();
 
 		if (StringManager.isPlaceholderAPI()) {
@@ -170,11 +183,17 @@ public class PrisonRanksX extends JavaPlugin {
 		if (globalSettings.isRankEnabled()) {
 			RankStorage.loadRanks();
 			rankSettings = new RankSettings();
+			ranksListSettings = new RanksListSettings();
 			rankupExecutor = new RankupExecutor(this);
 			if (RankupCommand.isEnabled()) {
 				rankupCommand = new RankupCommand(this);
 				rankupCommand.register();
 			}
+			if (RanksCommand.isEnabled()) {
+				ranksCommand = new RanksCommand(this);
+				ranksCommand.register();
+			}
+			ranksTextList = new RanksTextList(this);
 		}
 		if (globalSettings.isPrestigeEnabled()) {
 			PrestigeStorage.initAndLoad(globalSettings.isInfinitePrestige());
@@ -184,7 +203,11 @@ public class PrisonRanksX extends JavaPlugin {
 			RebirthStorage.loadRebirths();
 			rebirthSettings = new RebirthSettings();
 		}
-
+		adminExecutor = new AdminExecutor(this);
+		if (PRXCommand.isEnabled()) {
+			prxCommand = new PRXCommand(this);
+			prxCommand.register();
+		}
 		log("Enabled.");
 	}
 
@@ -195,20 +218,20 @@ public class PrisonRanksX extends JavaPlugin {
 				EventPriority.valueOf(globalSettings.getChatEventHandlingPriority()));
 	}
 
-	public static void log(String message) {
-		CONSOLE.sendMessage(PREFIX + " �a" + message);
+	public static void log(String message) { //
+		CONSOLE.sendMessage(PREFIX + " §a" + message);
 	}
 
 	public static void logNeutral(String message) {
-		CONSOLE.sendMessage(PREFIX + " �7" + message);
+		CONSOLE.sendMessage(PREFIX + " §7" + message);
 	}
 
 	public static void logWarning(String message) {
-		CONSOLE.sendMessage(PREFIX + " �e[!] " + message);
+		CONSOLE.sendMessage(PREFIX + " §e[!] " + message);
 	}
 
 	public static void logSevere(String message) {
-		CONSOLE.sendMessage(PREFIX + " �4[!] �c" + message);
+		CONSOLE.sendMessage(PREFIX + " §4[!] §c" + message);
 	}
 
 	public BukkitTask doSyncLater(Runnable runnable, int delay) {
@@ -287,6 +310,18 @@ public class PrisonRanksX extends JavaPlugin {
 
 	public HologramSettings getHologramSettings() {
 		return hologramSettings;
+	}
+
+	public RanksListSettings getRanksListSettings() {
+		return ranksListSettings;
+	}
+
+	public AdminExecutor getAdminExecutor() {
+		return adminExecutor;
+	}
+
+	public RanksTextList getRanksTextList() {
+		return ranksTextList;
 	}
 
 }

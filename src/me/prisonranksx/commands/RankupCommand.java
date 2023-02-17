@@ -6,6 +6,7 @@ import org.bukkit.entity.Player;
 
 import me.prisonranksx.PrisonRanksX;
 import me.prisonranksx.lists.RanksGUIList;
+import me.prisonranksx.lists.RanksTextList;
 import me.prisonranksx.settings.Messages;
 
 public class RankupCommand extends AbstractCommand {
@@ -42,6 +43,14 @@ public class RankupCommand extends AbstractCommand {
 			if (args[0].equals("gui")) {
 				RanksGUIList gl = new RanksGUIList(plugin);
 				gl.openGUI(p);
+				return true;
+			} else if (args[0].equals("max")) {
+				plugin.getRankupExecutor().maxRankup(p);
+				return true;
+			} else if (args[0].startsWith("list")) {
+				RanksTextList rtl = new RanksTextList(plugin);
+				rtl.setup();
+				rtl.sendPagedList(sender, args[0].replace("list", ""));
 				return true;
 			}
 			Player target = Bukkit.getPlayer(args[0]);

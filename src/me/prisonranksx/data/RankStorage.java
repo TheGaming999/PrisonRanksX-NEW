@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.bukkit.configuration.ConfigurationSection;
@@ -22,7 +23,7 @@ import me.prisonranksx.holders.Rank;
 import me.prisonranksx.managers.ConfigManager;
 import me.prisonranksx.managers.StringManager;
 
-public class RankStorage {
+public class RankStorage extends StorageFields {
 
 	/**
 	 * Key represents the path name, and the value represents a Map with a key
@@ -60,32 +61,23 @@ public class RankStorage {
 			rankSection.getKeys(false).forEach(rankName -> {
 				ConfigurationSection current = rankSection.getConfigurationSection(rankName);
 				Rank rank = new Rank(rankName,
-						StringManager.parseColorsAndSymbols(
-								ConfigManager.getOrElse(current, String.class, "display-name", "display", "prefix")),
-						ConfigManager.getOrElse(current, "next-rank", "nextrank"),
-						ConfigManager.getDoubleOrElse(current, "cost", "price"),
+						StringManager
+								.parseColorsAndSymbols(ConfigManager.getOrElse(current, String.class, DISPLAY_FIELDS)),
+						ConfigManager.getOrElse(current, NEXT_FIELDS),
+						ConfigManager.getDoubleOrElse(current, COST_FIELDS),
 						StringManager.parseColorsAndSymbols(current.getStringList("broadcast")),
+						StringManager
+								.parseColorsAndSymbols(ConfigManager.getOrElse(current, List.class, MESSAGE_FIELDS)),
+						CommandsComponent.parseCommands(ConfigManager.getOrElse(current, COMMANDS_FIELDS)),
+						RequirementsComponent.parseRequirements(ConfigManager.getOrElse(current, REQUIREMENTS_FIELDS)),
+						ActionBarComponent.parseActionBar(ConfigManager.getOrElse(current, ACTION_BAR_FIELDS)),
+						PermissionsComponent.parsePermissions(ConfigManager.getOrElse(current, ADD_PERMISSIONS_FIELDS),
+								ConfigManager.getOrElse(current, DEL_PERMISSIONS_FIELDS)),
+						FireworkComponent.parseFirework(ConfigManager.getOrElse(current, FIREWORK_FIELDS)),
+						RandomCommandsComponent
+								.parseRandomCommands(ConfigManager.getOrElse(current, RANDOM_COMMANDS_FIELDS)),
 						StringManager.parseColorsAndSymbols(
-								ConfigManager.getOrElse(current, List.class, "message", "msg", "messages")),
-						CommandsComponent.parseCommands(
-								ConfigManager.getOrElse(current, "commands", "executecmds", "command", "cmd")),
-						RequirementsComponent.parseRequirements(
-								ConfigManager.getOrElse(current, "requirements", "requirement", "require", "requires")),
-						ActionBarComponent.parseActionBar(ConfigManager.getOrElse(current, "action-bar", "actionbar")),
-						PermissionsComponent.parsePermissions(
-								ConfigManager.getOrElse(current, "add-permissions", "addpermission", "add-permission",
-										"addperm", "add-perm", "add-perms"),
-								ConfigManager.getOrElse(current, "delete-permissions", "delpermission",
-										"del-permission", "delete-permission", "remove-permissions",
-										"remove-permission", "del-perms")),
-						FireworkComponent.parseFirework(ConfigManager.getOrElse(current, "firework", "firework-builder",
-								"fireworks", "fire-work")),
-						RandomCommandsComponent.parseRandomCommands(ConfigManager.getOrElse(current, "random-commands",
-								"randomcmds", "random-command", "randomcmd", "random-cmds", "random-cmd")),
-						StringManager.parseColorsAndSymbols(ConfigManager.getOrElse(current, List.class,
-								"requirements-fail-message", "custom-requirement-message",
-								"custom-requirements-message", "requirement-fail-message", "requirements-fail-messages",
-								"requirements-message", "requirement-message")),
+								ConfigManager.getOrElse(current, List.class, REQUIREMENTS_FAIL_MESSAGE_FIELDS)),
 						ConfigManager.getBooleanOrElse(current, "allow-prestige", "allowprestige", "prestige"));
 				rank.setIndex(ranksMap.size());
 				ranksMap.put(rankName, rank);
@@ -160,6 +152,20 @@ public class RankStorage {
 
 	public static String getDefaultPath() {
 		return DEFAULT_PATH;
+	}
+
+	@Nonnull
+	public static String matchRankName(String rankName, String pathName) {
+		if (isInPath(rankName, pathName)) return rankName;
+		for (String name : getPathRankNames(pathName)) if (rankName.equalsIgnoreCase(name)) return name;
+		return rankName;
+	}
+
+	@Nullable
+	public static String findRankName(String rankName, String pathName) {
+		if (isInPath(rankName, pathName)) return rankName;
+		for (String name : getPathRankNames(pathName)) if (rankName.equalsIgnoreCase(name)) return name;
+		return null;
 	}
 
 }

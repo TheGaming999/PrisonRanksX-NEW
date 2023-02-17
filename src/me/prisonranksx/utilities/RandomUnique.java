@@ -6,7 +6,14 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * 
- * Generate random unique numbers
+ * Generate random unique numbers. Using the method {@link #generate()} x times
+ * won't generate the same number till the amount of generated numbers reaches
+ * the limit. For example, {@link #generate()} was used 10 times. The generated
+ * numbers in order are: [5, 4, 0, 1, 9, 6, 3, 7, 2, 8].
+ * Notice that there wasn't any number that got generated twice. However, using
+ * the method again can generate one of the numbers that got generated such as 4
+ * since the limit was reached. The same outcome can be forced using
+ * {@link #reset()}.
  *
  */
 public class RandomUnique {
@@ -35,6 +42,14 @@ public class RandomUnique {
 	public RandomUnique(int limit, LinkedList<Integer> uniqueList) {
 		this.limit = limit;
 		this.uniqueList = uniqueList;
+	}
+
+	public void reset() {
+		uniqueList.clear();
+	}
+
+	public boolean hasReachedLimit() {
+		return uniqueList.isEmpty();
 	}
 
 	public int generateDefault() {

@@ -32,7 +32,7 @@ public abstract class AbstractSettings {
 
 	protected String getString(String configNode) {
 		String string = parentSection.getString(configNode);
-		return configNode == null || string == null || string.isEmpty() ? null : string;
+		return configNode == null || string == null ? null : string;
 	}
 
 	protected String getString(String configNode, boolean parseColors) {
@@ -41,7 +41,7 @@ public abstract class AbstractSettings {
 	}
 
 	private String parseLines(String string) {
-		return string == null || string.isEmpty() ? null : string.replace("\\n", "\n");
+		return string == null ? null : string.replace("\\n", "\n");
 	}
 
 	protected int getInt(String configNode) {

@@ -10,6 +10,7 @@ import me.prisonranksx.components.FireworkComponent;
 import me.prisonranksx.components.PermissionsComponent;
 import me.prisonranksx.components.RandomCommandsComponent;
 import me.prisonranksx.components.RequirementsComponent;
+import me.prisonranksx.data.PrestigeStorage;
 
 public class Prestige {
 
@@ -27,6 +28,7 @@ public class Prestige {
 	private PermissionsComponent permissionsComponent;
 	private FireworkComponent fireworkComponent;
 	private RandomCommandsComponent randomCommandsComponent;
+	private long number;
 
 	public Prestige(String name, String displayName, String nextPrestigeName, double cost) {
 		this(name, displayName, nextPrestigeName, cost, null, null, null, null, null, null, null, null, null, 0.0);
@@ -54,6 +56,8 @@ public class Prestige {
 		this.requirementsMessages = requirementsMessages == null || requirementsMessages.isEmpty()
 				|| randomCommandsComponent == null ? null : requirementsMessages;
 		this.costIncrease = costIncrease;
+		this.number = PrestigeStorage.getHandler().isInfinite() ? Integer.parseInt(name)
+				: PrestigeStorage.getPrestiges().size() + 1;
 	}
 
 	public String getName() {
@@ -166,6 +170,14 @@ public class Prestige {
 
 	public void setCostIncrease(double costIncrease) {
 		this.costIncrease = costIncrease;
+	}
+
+	public long getNumber() {
+		return number;
+	}
+
+	public void setNumber(long number) {
+		this.number = number;
 	}
 
 }
